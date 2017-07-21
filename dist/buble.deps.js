@@ -12367,7 +12367,7 @@
     			preserveParens: true,
     			sourceType: 'module',
     			plugins: {
-    				asyncawait: true,
+    				asyncawait: {inAsyncFunction: true, asyncExits: true},
     				jsx: true,
     				objectSpread: true
     			}
