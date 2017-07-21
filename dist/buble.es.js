@@ -1266,27 +1266,30 @@ var inject$1 = __commonjs(function (module) {
 
 module.exports = function(acorn) {
   var tt = acorn.tokTypes;
-  var pp = acorn.Parser.prototype;
 
-  // this is the same parseObj that acorn has with...
+  // modified version of parseObj from acorn/src/expression.js
+  // with rest/spread code from https://github.com/babel/babylon/blob/master/src/parser/expression.js
   function parseObj(isPattern, refDestructuringErrors) {
-    var this$1 = this;
-
-    var node = this.startNode(), first = true, propHash = {}
+    let node = this.startNode(), first = true, propHash = {}
     node.properties = []
     this.next()
-    while (!this$1.eat(tt.braceR)) {
+    while (!this.eat(tt.braceR)) {
       if (!first) {
-        this$1.expect(tt.comma)
-        if (this$1.afterTrailingComma(tt.braceR)) break
+        this.expect(tt.comma)
+        if (this.afterTrailingComma(tt.braceR)) break
       } else first = false
 
-      var prop = this$1.startNode(), isGenerator, startPos, startLoc
-      if (this$1.options.ecmaVersion >= 6) {
-        // ...the spread logic borrowed from babylon :)
-        if (this$1.type === tt.ellipsis) {
-          prop = this$1.parseSpread()
-          prop.type = isPattern ? "RestProperty" : "SpreadProperty"
+      let prop = this.startNode(), isGenerator, isAsync, startPos, startLoc
+      if (this.options.ecmaVersion >= 6) {
+        // code for spread is adapted from babylon parser
+        if (this.type === tt.ellipsis) {
+          prop = this.parseSpread()
+          if (isPattern) {
+            prop.type = "RestElement"
+            prop.value = this.toAssignable(prop.argument, true)
+          } else {
+            prop.type = "SpreadElement"
+          }
           node.properties.push(prop)
           continue
         }
@@ -1294,22 +1297,53 @@ module.exports = function(acorn) {
         prop.method = false
         prop.shorthand = false
         if (isPattern || refDestructuringErrors) {
-          startPos = this$1.start
-          startLoc = this$1.startLoc
+          startPos = this.start
+          startLoc = this.startLoc
         }
         if (!isPattern)
-          isGenerator = this$1.eat(tt.star)
+          isGenerator = this.eat(tt.star)
       }
-      this$1.parsePropertyName(prop)
-      this$1.parsePropertyValue(prop, isPattern, isGenerator, startPos, startLoc, refDestructuringErrors)
-      this$1.checkPropClash(prop, propHash)
-      node.properties.push(this$1.finishNode(prop, "Property"))
+
+      this.parsePropertyName(prop)
+      if (!isPattern && this.options.ecmaVersion >= 8 && !isGenerator && !prop.computed &&
+        prop.key.type === "Identifier" && prop.key.name === "async" && this.type !== tt.parenL &&
+        this.type !== tt.colon && !this.canInsertSemicolon()) {
+        isAsync = true
+        this.parsePropertyName(prop, refDestructuringErrors)
+      } else {
+        isAsync = false
+      }
+      this.parsePropertyValue(prop, isPattern, isGenerator, isAsync, startPos, startLoc, refDestructuringErrors)
+      this.checkPropClash(prop, propHash)
+      node.properties.push(this.finishNode(prop, "Property"))
     }
     return this.finishNode(node, isPattern ? "ObjectPattern" : "ObjectExpression")
   }
 
-  acorn.plugins.objectSpread = function objectSpreadPlugin(instance) {
-    pp.parseObj = parseObj;
+  acorn.plugins.objectRestSpread = function objectRestSpreadPlugin(parser) {
+    acorn.Parser.prototype.parseObj = parseObj
+
+    parser.extend("toAssignable", function(nextMethod) {
+      return function(node, isBinding) {
+        if (this.options.ecmaVersion >= 6 && node && node.type === "ObjectExpression") {
+          node.type = "ObjectPattern"
+
+          for (var i = 0; i < node.properties.length; i++) {
+            var prop = node.properties[i]
+            if (prop.kind === "init") {
+              this.toAssignable(prop.value, isBinding)
+            } else if (prop.type === "SpreadElement") {
+              prop.value = this.toAssignable(prop.argument, isBinding)
+            } else {
+              this.raise(prop.key.start, "Object pattern can't contain getter or setter")
+            }
+          }
+          return node
+        }
+
+        return nextMethod.call(this, node, isBinding)
+      }
+    })
   };
 
   return acorn;
@@ -2299,10 +2333,14 @@ var ClassBody = (function (Node) {
 					}
 				}
 
+				// Hack. Deletes the first 6 characters to remove async
+				if ( method.value.async )
+					code.remove( method.start, method.start+6 );
+
 				code.insertRight( method.start, lhs );
 
 				var funcName = method.computed || isAccessor || !namedFunctions ? '' : (methodName + " ");
-				var rhs = ( isAccessor ? ("." + (method.kind)) : '' ) + " = function" + ( method.value.generator ? '* ' : ' ' ) + funcName;
+				var rhs = ( isAccessor ? ("." + (method.kind)) : '' ) + " = " + ( method.value.async ? 'async ' : '' ) + "function" + ( method.value.generator ? '* ' : ' ' ) + funcName;
 				code.remove( c, method.value.start );
 				code.insertRight( method.value.start, rhs );
 				code.insertLeft( method.end, ';' );
@@ -8182,7 +8220,7 @@ var features = [
 	'reservedProperties'
 ];
 
-var version = "0.15.3";
+var version = "0.15.4";
 
 var ref = [
 	acornAsyncAwait,
@@ -8236,9 +8274,9 @@ function transform ( source, options ) {
 			preserveParens: true,
 			sourceType: 'module',
 			plugins: {
-				asyncawait: {inAsyncFunction: true, asyncExits: true},
+				asyncawait: {awaitAnywhere: true, asyncExits: true},
 				jsx: true,
-				objectSpread: true
+				objectRestSpread: true
 			}
 		});
 	} catch ( err ) {

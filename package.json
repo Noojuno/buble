@@ -1,6 +1,6 @@
 {
   "name": "buble",
-  "version": "0.15.3",
+  "version": "0.15.4",
   "description": "The blazing fast, batteries-included ES2015 compiler",
   "main": "dist/buble.umd.js",
   "jsnext:main": "dist/buble.es.js",
@@ -63,7 +63,7 @@
     "source-map-support": "^0.4.0"
   },
   "dependencies": {
-    "acorn": "^3.3.0",
+    "acorn": "^5.1.1",
     "acorn-es7-plugin": "^1.1.7",
     "acorn-jsx": "^3.0.1",
     "acorn-object-spread": "^1.0.0",
