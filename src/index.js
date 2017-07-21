@@ -1,7 +1,7 @@
 import acorn from 'acorn/dist/acorn.js';
 import acornJsx from 'acorn-jsx/inject';
 import acornAsyncAwait from 'acorn-es7-plugin';
-import acornObjectSpread from 'acorn-object-spread/inject';
+import acornObjectSpread from 'acorn-object-rest-spread/inject';
 import Program from './program/Program.js';
 import { features, matrix } from './support.js';
 import getSnippet from './utils/getSnippet.js';
@@ -55,9 +55,9 @@ export function transform ( source, options = {} ) {
 			preserveParens: true,
 			sourceType: 'module',
 			plugins: {
-				asyncawait: {inAsyncFunction: true, asyncExits: true},
+				asyncawait: {asyncExits: true},
 				jsx: true,
-				objectSpread: true
+				objectRestSpread: true
 			}
 		});
 	} catch ( err ) {
