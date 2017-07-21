@@ -64,6 +64,7 @@
   },
   "dependencies": {
     "acorn": "^3.3.0",
+    "acorn-es7-plugin": "^1.1.7",
     "acorn-jsx": "^3.0.1",
     "acorn-object-spread": "^1.0.0",
     "chalk": "^1.1.3",

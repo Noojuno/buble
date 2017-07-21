@@ -1,5 +1,6 @@
 import acorn from 'acorn/dist/acorn.js';
 import acornJsx from 'acorn-jsx/inject';
+import acornEs7 from 'acorn-es7-plugin';
 import acornObjectSpread from 'acorn-object-spread/inject';
 import Program from './program/Program.js';
 import { features, matrix } from './support.js';
@@ -7,7 +8,8 @@ import getSnippet from './utils/getSnippet.js';
 
 const { parse } = [
 	acornObjectSpread,
-	acornJsx
+	acornJsx,
+	acornEs7
 ].reduce( ( final, plugin ) => plugin( final ), acorn );
 
 const dangerousTransforms = [
@@ -54,7 +56,8 @@ export function transform ( source, options = {} ) {
 			sourceType: 'module',
 			plugins: {
 				jsx: true,
-				objectSpread: true
+				objectSpread: true,
+				asyncawait:true
 			}
 		});
 	} catch ( err ) {
