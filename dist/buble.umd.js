@@ -8238,7 +8238,7 @@
 
     	try {
     		ast = parse( source, {
-    			ecmaVersion: 7,
+    			ecmaVersion: 8,
     			preserveParens: true,
     			sourceType: 'module',
     			plugins: {
