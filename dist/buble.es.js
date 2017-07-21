@@ -8274,7 +8274,7 @@ function transform ( source, options ) {
 			preserveParens: true,
 			sourceType: 'module',
 			plugins: {
-				asyncawait: {asyncExits: true},
+				asyncawait: {awaitAnywhere: true, asyncExits: true},
 				jsx: true,
 				objectRestSpread: true
 			}
