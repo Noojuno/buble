@@ -2299,10 +2299,14 @@ var ClassBody = (function (Node) {
 					}
 				}
 
+				// Hack. Deletes the first 6 characters to remove async
+				if ( method.value.async )
+					code.remove( method.start, method.start+6 );
+
 				code.insertRight( method.start, lhs );
 
 				var funcName = method.computed || isAccessor || !namedFunctions ? '' : (methodName + " ");
-				var rhs = ( isAccessor ? ("." + (method.kind)) : '' ) + " = function" + ( method.value.generator ? '* ' : ' ' ) + funcName;
+				var rhs = ( isAccessor ? ("." + (method.kind)) : '' ) + " = " + ( method.value.async ? 'async ' : '' ) + "function" + ( method.value.generator ? '* ' : ' ' ) + funcName;
 				code.remove( c, method.value.start );
 				code.insertRight( method.value.start, rhs );
 				code.insertLeft( method.end, ';' );
@@ -8182,7 +8186,7 @@ var features = [
 	'reservedProperties'
 ];
 
-var version = "0.15.3";
+var version = "0.15.4";
 
 var ref = [
 	acornAsyncAwait,
