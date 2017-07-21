@@ -1265,7 +1265,7 @@
     }
     });
 
-    var acornEs7 = (acornEs7Plugin && typeof acornEs7Plugin === 'object' && 'default' in acornEs7Plugin ? acornEs7Plugin['default'] : acornEs7Plugin);
+    var acornAsyncAwait = (acornEs7Plugin && typeof acornEs7Plugin === 'object' && 'default' in acornEs7Plugin ? acornEs7Plugin['default'] : acornEs7Plugin);
 
     var inject$1 = __commonjs(function (module) {
     'use strict';
@@ -8191,9 +8191,9 @@
     var version = "0.15.3";
 
     var ref = [
+    	acornAsyncAwait,
     	acornObjectSpread,
-    	acornJsx,
-    	acornEs7
+    	acornJsx
     ].reduce( function ( final, plugin ) { return plugin( final ); }, acorn );
     var parse = ref.parse;
 
@@ -8242,9 +8242,9 @@
     			preserveParens: true,
     			sourceType: 'module',
     			plugins: {
+    				asyncawait: true,
     				jsx: true,
-    				objectSpread: true,
-    				asyncawait:true
+    				objectSpread: true
     			}
     		});
     	} catch ( err ) {
