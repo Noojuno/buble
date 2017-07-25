@@ -140,15 +140,13 @@ export default class ClassBody extends Node {
 					}
 				}
 
-				// Hack. Deletes the first 6 characters to remove async
-				if ( method.value.async )
-					code.remove( method.start, method.start+6 );
-
 				code.insertRight( method.start, lhs );
 
 				const funcName = method.computed || isAccessor || !namedFunctions ? '' : `${methodName} `;
 				const rhs = ( isAccessor ? `.${method.kind}` : '' ) + ` = ` + ( method.value.async ? 'async ' : '' ) + `function` + ( method.value.generator ? '* ' : ' ' ) + funcName;
 				code.remove( c, method.value.start );
+				if ( method.value.async )
+					code.remove( method.start, method.start+6 );	// "async " prefix is 6 characters long
 				code.insertRight( method.value.start, rhs );
 				code.insertLeft( method.end, ';' );
 
